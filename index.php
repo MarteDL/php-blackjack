@@ -80,7 +80,7 @@ if (isset($_POST['surrender'])) {
 }
 
 // if statement to hide/display our 'how many chips do you want to bet' input field
-if (count($_SESSION['player']->getCards()) === 2 && !$_SESSION['player']->hasLost() && !$_SESSION['dealer']->hasLost()) {
+if (count($_SESSION['player']->getCards()) === 2) {
     $_SESSION['hidden'] = "";
 } else {
     $_SESSION['hidden'] = "d-none";
