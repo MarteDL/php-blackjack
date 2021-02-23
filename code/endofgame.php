@@ -9,7 +9,7 @@ error_reporting(E_ALL);
 
 require '../index.php';
 
-$winnerMessage = "The winner of this round of Blackjack is the " . $_SESSION['winner'] . ".";
+$winnerMessage = "The winner of this round of Blackjack is the " . $_SESSION['blackjack']->getWinner() . ".";
 
 if ($_SESSION['winner'] === 'player') {
     $_SESSION['chips'] += ($_SESSION['bet']*2);
@@ -19,14 +19,15 @@ if ($_SESSION['winner'] === 'player') {
 
 if (isset($_POST['new-round'])) {
     unset($_SESSION['blackjack']);
-    header("Location: http://becode.local/php-blackjack/index.php");
+    header("Location: ../index.php");
+    exit;
 }
 
 if (isset($_POST['new-game'])) {
     session_destroy();
-    header("Location: http://becode.local/php-blackjack/index.php");
+    header("Location: ../index.php");
+    exit;
 }
-
 ?>
 
 

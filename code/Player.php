@@ -6,33 +6,30 @@ class Player
 {
     protected array $cards = [];
     protected bool $lost = false;
-    protected $score;
 
     CONST MAX_NUMBER = 21;
 
     public function __construct(Deck $deck)
     {
-        array_push($this->cards, $deck->drawCard());
-        array_push($this->cards, $deck->drawCard());
+        $this->cards[] = $deck->drawCard();
+        $this->cards[] = $deck->drawCard();
     }
 
     public function getScore(): int
     {
-        $this->score = 0;
+        $score = 0;
         foreach ($this->cards as $card) {
-            $this->score += $card->getValue();
+            $score += $card->getValue();
         }
 
-        return $this->score;
+        return $score;
     }
 
     public function hit(Deck $deck) : void
     {
-        array_push($this->cards, $deck->drawCard());
+        $this->cards[] = $deck->drawCard();
 
-        if ($this->getScore() > self::MAX_NUMBER){
-            $this->lost = true;
-        }
+        $this->lost = ($this->getScore() > self::MAX_NUMBER);
     }
 
     public function setLost(): void
@@ -40,20 +37,22 @@ class Player
         $this->lost = true;
     }
 
+    public function surrender() : void
+    {
+        $this->setLost();
+    }
+
     public function hasLost() : bool
     {
         return $this->lost;
     }
 
-    public function surrender() : void
-    {
-        $this->lost = true;
-    }
-
-    public function displayCards() : void {
+    public function displayCards() : string {
+        $str = '';
         foreach($this->cards AS $card) {
-            echo $card->getUnicodeCharacter(true);
+            $str .= $card->getUnicodeCharacter(true);
         }
+        return $str;
     }
 
     public function getCards(): array

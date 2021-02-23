@@ -23,17 +23,6 @@ function gameOver(): void
     header("Location: http://becode.local/php-blackjack/code/endofgame.php");
 }
 
-function checkForWinner() : void
-{
-    if ($_SESSION['dealer']->hasLost()) {
-        $_SESSION['winner'] = 'player';
-        gameOver();
-    } else if ($_SESSION['player']->hasLost()) {
-        $_SESSION['winner'] = 'dealer';
-        gameOver();
-    }
-}
-
 // two if statements in regards to betting the chips
 if (!isset($_SESSION['chips'])) {
     $_SESSION['chips'] = 100;
@@ -50,13 +39,14 @@ if (!isset($_SESSION['blackjack'])) {
     $_SESSION['blackjack'] = new Blackjack();
     $_SESSION['player'] = $_SESSION['blackjack']->getPlayer();
     $_SESSION['dealer'] = $_SESSION['blackjack']->getDealer();
-    $_SESSION['deck'] = $_SESSION['blackjack']->getDeck();
 }
 
 // hit button function
 if (isset($_POST['hit'])) {
-    $_SESSION['player']->hit($_SESSION['deck']);
-    checkForWinner();
+    $_SESSION['player']->hit($_SESSION['blackjack']->getDeck());
+    if($_SESSION['blackjack']->checkForWinner()) {
+        gameOver();
+    }
 }
 
 // stand button function
@@ -69,13 +59,16 @@ if (isset($_POST['stand'])) {
     } else {
         $_SESSION['player']->setLost();
     }
-    checkForWinner();
+
+    if($_SESSION['blackjack']->checkForWinner()) {
+        gameOver();
+    }
 }
 
 // surrender button function
 if (isset($_POST['surrender'])) {
     $_SESSION['player']->surrender();
-    $_SESSION['winner'] = 'dealer';
+
     gameOver();
 }
 

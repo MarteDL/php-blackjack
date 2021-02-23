@@ -15,7 +15,6 @@ class Blackjack
 
         $this->player = new Player($this->deck);
         $this->dealer = new Dealer($this->deck);
-
     }
 
     public function getPlayer(): Player
@@ -33,4 +32,27 @@ class Blackjack
         return $this->deck;
     }
 
+    function checkForWinner() : bool
+    {
+        if ($this->getDealer()->hasLost()) {
+            return true;
+        }
+
+        if ($this->getPlayer()->hasLost()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function getWinner() : string
+    {
+        if ($this->getDealer()->hasLost()) {
+            return 'dealer';
+        }
+
+        if ($this->getPlayer()->hasLost()) {
+            return 'player';
+        }
+    }
 }
