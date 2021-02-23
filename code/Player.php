@@ -2,48 +2,62 @@
 
 declare(strict_types=1);
 
-require('Deck.php');
-
 class Player
 {
-    private array $cards = [];
-    private bool $lost = false;
+    protected array $cards = [];
+    protected bool $lost = false;
+    protected $score;
 
     CONST MAX_NUMBER = 21;
 
     public function __construct(Deck $deck)
     {
-        $this->cards += $deck->drawCard();
-        $this->cards += $deck->drawCard();
+        array_push($this->cards, $deck->drawCard());
+        array_push($this->cards, $deck->drawCard());
     }
 
     public function getScore(): int
     {
+        $this->score = 0;
         foreach ($this->cards as $card) {
-            $score += $card->getValue();
+            $this->score += $card->getValue();
         }
 
-        return $score;
+        return $this->score;
     }
 
-    public function hit(Deck $deck)
+    public function hit(Deck $deck) : void
     {
-        $this->cards += $deck->drawCard();
+        array_push($this->cards, $deck->drawCard());
 
-        if ($this->cards->getScore() > self::MAX_NUMBER){
+        if ($this->getScore() > self::MAX_NUMBER){
             $this->lost = true;
         }
-
     }
 
-    public function hasLost()
-    {
-        return $this->lost;
-    }
-
-    public function surrender()
+    public function setLost(): void
     {
         $this->lost = true;
     }
 
+    public function hasLost() : bool
+    {
+        return $this->lost;
+    }
+
+    public function surrender() : void
+    {
+        $this->lost = true;
+    }
+
+    public function displayCards() : void {
+        foreach($this->cards AS $card) {
+            echo $card->getUnicodeCharacter(true);
+        }
+    }
+
+    public function getCards(): array
+    {
+        return $this->cards;
+    }
 }

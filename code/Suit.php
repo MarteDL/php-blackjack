@@ -13,7 +13,6 @@ class Suit
     private const CHAR_DIAMOND = 127168;
     private const CHAR_CLUB = 127184;
 
-    /** @var string */
     private $name;
 
     private function __construct(string $name) {

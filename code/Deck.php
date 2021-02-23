@@ -18,7 +18,9 @@ class Deck
 
         foreach ($suits AS $suit) {
             foreach(range(1, self::CARDS_PER_SUIT) AS $i) {
-                if($i === self::KNIGHT_CARD) continue;
+                if($i === self::KNIGHT_CARD) {
+                    continue;
+                }
 
                 $this->cards[] = new Card($suit, $i);
             }
@@ -29,7 +31,6 @@ class Deck
         shuffle($this->cards);
     }
 
-    /** @return Card[] */
     public function getCards() : array
     {
         return $this->cards;
