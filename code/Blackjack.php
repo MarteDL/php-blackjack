@@ -8,7 +8,8 @@ class Blackjack
     private Player $dealer;
     private Deck $deck;
 
-    public function __construct() {
+    public function __construct()
+    {
 
         $this->deck = new Deck();
         $this->deck->shuffle();
@@ -32,7 +33,7 @@ class Blackjack
         return $this->deck;
     }
 
-    function checkForWinner() : bool
+    function checkForWinner(): bool
     {
         if ($this->getDealer()->hasLost()) {
             return true;
@@ -45,14 +46,17 @@ class Blackjack
         return false;
     }
 
-    public function getWinner() : string
+    public function getWinner(): string
     {
         if ($this->getDealer()->hasLost()) {
-            return 'player';
+            return 'you';
         }
 
         if ($this->getPlayer()->hasLost()) {
-            return 'dealer';
+            return 'the dealer';
         }
+
+        return "no one because it's a tie";
+
     }
 }

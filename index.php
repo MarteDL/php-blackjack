@@ -18,17 +18,6 @@ session_start();
 const MIN_CHIPS = 5;
 $display = "";
 
-// two if statements in regards to betting the chips
-if (!isset($_SESSION['chips'])) {
-    $_SESSION['chips'] = 100;
-}
-
-if (isset ($_POST['chips']) && !empty($_POST['chips'])) {
-    $_SESSION['bet'] = (int)$_POST['chips'];
-    $_SESSION['chips'] -= (int)$_POST['chips'];
-    unset($_POST['chips']);
-}
-
 // starting our new blackjack session
 if (!isset($_SESSION['blackjack'])) {
     $_SESSION['blackjack'] = new Blackjack();
@@ -36,7 +25,37 @@ if (!isset($_SESSION['blackjack'])) {
     $_SESSION['dealer'] = $_SESSION['blackjack']->getDealer();
 }
 
-// hit button function
+// setting the chips at the start of a new game
+if (!isset($_SESSION['chips'])) {
+    $_SESSION['chips'] = 100;
+}
+
+// betting the chips
+if (isset ($_POST['chips']) && !empty($_POST['chips'])) {
+    $_SESSION['bet'] = (int)$_POST['chips'];
+    $_SESSION['chips'] -= (int)$_POST['chips'];
+    unset($_POST['chips']);
+}
+
+// blackjack first turn
+if(count($_SESSION['player']->getCards()) === 2 && count($_SESSION['dealer']->getCards()) === 2) {
+    if ($_SESSION['player']->getScore() === 21) {
+        $_SESSION['dealer']->setLost();
+        $_SESSION['bet'] = 5;
+        $display = "You have BLACKJACK, yay! Sooo... ". gameOver();
+    }
+    if ($_SESSION['dealer']->getScore() === 21) {
+        $_SESSION['player']->setLost();
+        $_SESSION['bet'] = 5;
+        $_SESSION['chips'] -= $_SESSION['bet'];
+        $display = "The dealer has BLACKJACK! Sooo... ". gameOver();
+    }
+    if ($_SESSION['player']->getScore() === 21 && $_SESSION['dealer']->getScore() === 21) {
+        $display = "You and the dealer both have BLACKJACK. Sooo... ".gameOver();
+    }
+}
+
+// hit button
 if (isset($_POST['hit'])) {
     $_SESSION['player']->hit($_SESSION['blackjack']->getDeck());
     if($_SESSION['blackjack']->checkForWinner()) {
@@ -44,7 +63,7 @@ if (isset($_POST['hit'])) {
     }
 }
 
-// stand button function
+// stand button
 if (isset($_POST['stand'])) {
 
     if($_SESSION['dealer']->getScore() < $_SESSION['player']->getScore()) {
@@ -62,10 +81,9 @@ if (isset($_POST['stand'])) {
     }
 }
 
-// surrender button function
+// surrender button
 if (isset($_POST['surrender'])) {
     $_SESSION['player']->surrender();
-
     $display = gameOver();
 }
 
@@ -80,27 +98,33 @@ if (count($_SESSION['player']->getCards()) === 2) {
 function gameOver(): string
 {
     $_SESSION['hidden'] = 'd-none';
-    $winnerMessage = "The winner of this round of Blackjack is the ";
+    $winnerMessage = "The winner of this round ";
 
-    if ($_SESSION['blackjack']->getWinner() === 'player') {
+    if ($_SESSION['blackjack']->getWinner() === 'you') {
         $_SESSION['chips'] += ($_SESSION['bet']*2);
         $winnerMessage .= $_SESSION['blackjack']->getWinner() . ". You win " . ($_SESSION['bet']*2) . " chips this round! Buy yourself something pretty ;-)";
         unset($_SESSION['bet']);
         return $winnerMessage;
-    } else {
+    }
+    if ($_SESSION['blackjack']->getWinner() === 'the dealer'){
         $winnerMessage .= $_SESSION['blackjack']->getWinner() . ". You've lost " . $_SESSION['bet'] . " chips this round! Better luck next time... (or not)";
         unset($_SESSION['bet']);
         return $winnerMessage;
     }
+
+    $winnerMessage .= $_SESSION['blackjack']->getWinner() . ". Your amount of chips stays the same!";
+    unset($_SESSION['bet']);
+    return $winnerMessage;
 }
 
-
+// new round button
 if (isset($_POST['new-round'])) {
     unset($_SESSION['blackjack']);
     header("location: index.php");
     exit;
 }
 
+// new game button
 if (isset($_POST['new-game'])) {
     session_destroy();
     header("location: index.php");
