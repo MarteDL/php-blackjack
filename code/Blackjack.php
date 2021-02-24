@@ -2,13 +2,18 @@
 
 declare(strict_types=1);
 
+use JetBrains\PhpStorm\NoReturn;
+use JetBrains\PhpStorm\Pure;
+
 class Blackjack
 {
+    private CONST MAX_SCORE = 21;
+
     private Player $player;
     private Player $dealer;
     private Deck $deck;
 
-    public function __construct()
+    #[NoReturn] public function __construct()
     {
 
         $this->deck = new Deck();
@@ -16,6 +21,8 @@ class Blackjack
 
         $this->player = new Player($this->deck);
         $this->dealer = new Dealer($this->deck);
+
+        $this->checkForBlackjack();
     }
 
     public function getPlayer(): Player
@@ -33,30 +40,38 @@ class Blackjack
         return $this->deck;
     }
 
-    function checkForWinner(): bool
+    #[NoReturn] public function checkForBlackjack () : void
     {
-        if ($this->getDealer()->hasLost()) {
-            return true;
+        if ($this->getDealer()->getScore() === self::MAX_SCORE && $this->getPlayer()->getScore() === self::MAX_SCORE) {
+            $this->getPlayer()->setLost();
+            $this->getDealer()->setLost();
+            return;
         }
-
-        if ($this->getPlayer()->hasLost()) {
-            return true;
+        if ($this->getDealer()->getScore() === self::MAX_SCORE) {
+            $this->getPlayer()->setLost();
+            return;
         }
-
-        return false;
+        if ($this->getPlayer()->getScore() === self::MAX_SCORE) {
+            $this->getDealer()->setLost();
+            return;
+        }
     }
 
-    public function getWinner(): string
+    #[Pure] public function checkForWinner(): bool
     {
+        return !(!$this->getDealer()->hasLost() && !$this->getPlayer()->hasLost());
+    }
+
+    #[Pure] public function getWinner(): string
+    {
+        if ($this->getDealer()->hasLost() && $this->getPlayer()->hasLost()){
+            return "no one because it's a tie";
+        }
         if ($this->getDealer()->hasLost()) {
             return 'you';
         }
-
         if ($this->getPlayer()->hasLost()) {
             return 'the dealer';
         }
-
-        return "no one because it's a tie";
-
     }
 }

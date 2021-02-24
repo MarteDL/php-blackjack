@@ -7,7 +7,7 @@ class Player
     protected array $cards = [];
     protected bool $lost = false;
 
-    CONST MAX_NUMBER = 21;
+    protected CONST MAX_NUMBER = 21;
 
     public function __construct(Deck $deck)
     {
@@ -28,7 +28,6 @@ class Player
     public function hit(Deck $deck) : void
     {
         $this->cards[] = $deck->drawCard();
-
         $this->lost = ($this->getScore() > self::MAX_NUMBER);
     }
 

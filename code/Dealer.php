@@ -7,7 +7,7 @@ class Dealer extends Player
     {
         parent::hit($deck);
         if ($this->getScore() <= 15) {
-            $this->hit($deck);
+            parent::hit($deck);
         }
     }
 }
