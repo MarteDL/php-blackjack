@@ -16,12 +16,7 @@ require 'code/Dealer.php';
 session_start();
 
 const MIN_CHIPS = 5;
-
-function gameOver(): void
-{
-    $_SESSION['hidden'] = 'd-none';
-    header("Location: http://becode.local/php-blackjack/code/endofgame.php");
-}
+$display = "";
 
 // two if statements in regards to betting the chips
 if (!isset($_SESSION['chips'])) {
@@ -45,14 +40,16 @@ if (!isset($_SESSION['blackjack'])) {
 if (isset($_POST['hit'])) {
     $_SESSION['player']->hit($_SESSION['blackjack']->getDeck());
     if($_SESSION['blackjack']->checkForWinner()) {
-        gameOver();
+        $display = gameOver();
     }
 }
 
 // stand button function
 if (isset($_POST['stand'])) {
 
-    $_SESSION['dealer']->hit($_SESSION['blackjack']->getDeck());
+    if($_SESSION['dealer']->getScore() < $_SESSION['player']->getScore()) {
+        $_SESSION['dealer']->hit($_SESSION['blackjack']->getDeck());
+    }
 
     if ($_SESSION['dealer']->getScore() < $_SESSION['player']->getScore()) {
         $_SESSION['dealer']->setLost();
@@ -61,7 +58,7 @@ if (isset($_POST['stand'])) {
     }
 
     if($_SESSION['blackjack']->checkForWinner()) {
-        gameOver();
+        $display = gameOver();
     }
 }
 
@@ -69,7 +66,7 @@ if (isset($_POST['stand'])) {
 if (isset($_POST['surrender'])) {
     $_SESSION['player']->surrender();
 
-    gameOver();
+    $display = gameOver();
 }
 
 // if statement to hide/display our 'how many chips do you want to bet' input field
@@ -77,6 +74,37 @@ if (count($_SESSION['player']->getCards()) === 2) {
     $_SESSION['hidden'] = "";
 } else {
     $_SESSION['hidden'] = "d-none";
+}
+
+// when the game is over
+function gameOver(): string
+{
+    $_SESSION['hidden'] = 'd-none';
+    $winnerMessage = "The winner of this round of Blackjack is the ";
+
+    if ($_SESSION['blackjack']->getWinner() === 'player') {
+        $_SESSION['chips'] += ($_SESSION['bet']*2);
+        $winnerMessage .= $_SESSION['blackjack']->getWinner() . ". You win " . ($_SESSION['bet']*2) . " chips this round! Buy yourself something pretty ;-)";
+        unset($_SESSION['bet']);
+        return $winnerMessage;
+    } else {
+        $winnerMessage .= $_SESSION['blackjack']->getWinner() . ". You've lost " . $_SESSION['bet'] . " chips this round! Better luck next time... (or not)";
+        unset($_SESSION['bet']);
+        return $winnerMessage;
+    }
+}
+
+
+if (isset($_POST['new-round'])) {
+    unset($_SESSION['blackjack']);
+    header("location: index.php");
+    exit;
+}
+
+if (isset($_POST['new-game'])) {
+    session_destroy();
+    header("location: index.php");
+    exit;
 }
 
 ?>
@@ -93,7 +121,7 @@ if (count($_SESSION['player']->getCards()) === 2) {
     <title>Blackjack</title>
 </head>
 
-<body class="text-center">
+<body style="background-image: url(img/blackjack.jpg); background-size: cover; background-repeat: no-repeat;" class="text-center text-light">
 <h1 class="m-5">Get ready for an awesome game of blackjack!</h1>
 <div class="container">
     <div class="row justify-content-center">
@@ -101,18 +129,18 @@ if (count($_SESSION['player']->getCards()) === 2) {
             <div id="player">
                 <h3 class="mb-5">The Table</h3>
                 <h5>Player cards</h5>
-                <h4>
+                <h4 class="bg-light d-inline-block p-3 rounded">
                     <?php
-                    $_SESSION['player']->displayCards();
+                    echo $_SESSION['player']->displayCards();
                     ?>
                 </h4>
             </div>
             </br>
             <div id="dealer">
                 <h5>Dealer cards</h5>
-                <h4>
+                <h4 class="bg-light d-inline-block p-3 rounded">
                     <?php
-                    $_SESSION['dealer']->displayCards();
+                    echo $_SESSION['dealer']->displayCards();
                     ?>
                 </h4>
             </div>
@@ -137,6 +165,17 @@ if (count($_SESSION['player']->getCards()) === 2) {
                 <input class="ml-2" type="number" id="chips" name="chips" min="<?php echo MIN_CHIPS ?>"
                        max="<?php echo $_SESSION['chips'] ?>">
             </fieldset>
+            <?php
+            if($_SESSION['blackjack']->checkForWinner()) :
+            ?>
+            <div class="m-5 p-3 bg-danger rounded"><?php echo $display ?></div>
+            <form action="" method="POST">
+                <button type="submit" name="new-round">Same game, new round</button>
+                <button type="submit" name="new-game">New game</button>
+            </form>
+            <?php
+            endif;
+            ?>
         </form>
     </div>
 </div>

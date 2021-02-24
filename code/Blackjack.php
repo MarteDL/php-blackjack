@@ -48,11 +48,11 @@ class Blackjack
     public function getWinner() : string
     {
         if ($this->getDealer()->hasLost()) {
-            return 'dealer';
+            return 'player';
         }
 
         if ($this->getPlayer()->hasLost()) {
-            return 'player';
+            return 'dealer';
         }
     }
 }
