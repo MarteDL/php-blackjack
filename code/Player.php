@@ -36,11 +36,6 @@ class Player
         $this->lost = true;
     }
 
-    public function surrender() : void
-    {
-        $this->setLost();
-    }
-
     public function hasLost() : bool
     {
         return $this->lost;

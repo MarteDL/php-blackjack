@@ -19,24 +19,21 @@ const MIN_CHIPS = 5;
 $display = '';
 $_SESSION['hidden'] = "d-none";
 
-function gameOver(): string
+// when the game is over, see who has won and display it
+function gameOver($blackjack): string
 {
     $_SESSION['hidden'] = 'd-none';
     $winnerMessage = "The winner of this round is ";
 
-    if ($_SESSION['blackjack']->getWinner() === 'you') {
+    if ($blackjack->getWinner() === 'you') {
         $_SESSION['chips'] += ($_SESSION['bet'] * 2);
-        $winnerMessage .= $_SESSION['blackjack']->getWinner() . ". You win " . ($_SESSION['bet'] * 2) . " chips this round! Buy yourself something pretty ;-)";
-        unset($_SESSION['bet']);
-        return $winnerMessage;
-    }
-    if ($_SESSION['blackjack']->getWinner() === 'the dealer') {
-        $winnerMessage .= $_SESSION['blackjack']->getWinner() . ". You've lost " . $_SESSION['bet'] . " chips this round! Better luck next time... (or not)";
-        unset($_SESSION['bet']);
-        return $winnerMessage;
+        $winnerMessage .= $blackjack->getWinner() . ". You win " . ($_SESSION['bet'] * 2) . " chips this round! Buy yourself something pretty ;-)";
+    } else if ($blackjack->getWinner() === 'the dealer') {
+        $winnerMessage .= $blackjack->getWinner() . ". You've lost " . $_SESSION['bet'] . " chips this round! Better luck next time... (or not)";
+    } else {
+        $winnerMessage .= $blackjack->getWinner() . ". Your amount of chips stays the same!";
     }
 
-    $winnerMessage .= $_SESSION['blackjack']->getWinner() . ". Your amount of chips stays the same!";
     unset($_SESSION['bet']);
     return $winnerMessage;
 }
@@ -57,10 +54,11 @@ if (!isset($_SESSION['blackjack'])) {
         if ($_SESSION['blackjack']->getWinner() === 'the dealer') {
             $_SESSION['chips'] -= $_SESSION['bet'];
         }
-        $display = gameOver();
+        $display = gameOver($_SESSION['blackjack']);
     }
     $_SESSION['hidden'] = "";
 }
+$blackjack = $_SESSION['blackjack'];
 
 // betting the chips
 if (isset ($_POST['chips']) && !empty($_POST['chips'])) {
@@ -69,55 +67,41 @@ if (isset ($_POST['chips']) && !empty($_POST['chips'])) {
     unset($_POST['chips']);
 }
 
-// hit button
-if (isset($_POST['hit'])) {
-    $_SESSION['blackjack']->getPlayer()->hit($_SESSION['blackjack']->getDeck());
-    if ($_SESSION['blackjack']->checkForWinner()) {
-        $display = gameOver();
+// our button actions
+if (isset($_POST['action'])) {
+    switch ($_POST['action']) {
+        case 'hit':
+            $blackjack->getPlayer()->hit($blackjack->getDeck());
+            break;
+        case 'stand':
+            $blackjack->getDealer()->hit($blackjack->getDeck());
+            if ($blackjack->checkForWinner()) {
+                break;
+            }
+            if ($blackjack->getDealer()->getScore() < $blackjack->getPlayer()->getScore()) {
+                $blackjack->getDealer()->setLost();
+            }
+            if ($blackjack->getDealer()->getScore() >= $blackjack->getPlayer()->getScore()) {
+                $blackjack->getPlayer()->setLost();
+            }
+            break;
+        case 'surrender':
+            $blackjack->getPlayer()->setLost();
+            break;
+        case 'new-round':
+            unset($_SESSION['blackjack']);
+            header("location: index.php");
+            exit;
+        case 'new-game':
+            session_destroy();
+            header("location: index.php");
+            exit;
+        default:
+            die(sprintf('Got unknown action %s', $_POST['action']));
     }
-}
-
-// stand button
-if (isset($_POST['stand'])) {
-
-    if ($_SESSION['blackjack']->getDealer()->getScore() < $_SESSION['blackjack']->getPlayer()->getScore()) {
-        $_SESSION['blackjack']->getDealer()->hit($_SESSION['blackjack']->getDeck());
+    if ($blackjack->checkForWinner()) {
+        $display = gameOver($blackjack);
     }
-
-    if ($_SESSION['blackjack']->checkForWinner()) {
-        $display = gameOver();
-    }
-
-    else if ($_SESSION['blackjack']->getDealer()->getScore() < $_SESSION['blackjack']->getPlayer()->getScore()) {
-        $_SESSION['blackjack']->getDealer()->setLost();
-        $display = gameOver();
-    }
-
-    else if ($_SESSION['blackjack']->getPlayer()->getScore() <= $_SESSION['blackjack']->getDealer()->getScore()) {
-        $_SESSION['blackjack']->getPlayer()->setLost();
-        $display = gameOver();
-    }
-}
-
-// surrender button
-if (isset($_POST['surrender'])) {
-    $_SESSION['blackjack']->getPlayer()->surrender();
-    $display = gameOver();
-}
-
-// when the game is over
-// new round button
-if (isset($_POST['new-round'])) {
-    unset($_SESSION['blackjack']);
-    header("location: index.php");
-    exit;
-}
-
-// new game button
-if (isset($_POST['new-game'])) {
-    session_destroy();
-    header("location: index.php");
-    exit;
 }
 
 ?>
@@ -146,27 +130,29 @@ if (isset($_POST['new-game'])) {
         <div class="col-3">
             <div id="player">
                 <h3 class="mb-5">The Table</h3>
-                <h5>Player cards</h5>
+                <h5>Player's cards</h5>
                 <h4 class="bg-light d-inline-block p-3 rounded">
                     <?php
-                    echo $_SESSION['blackjack']->getPlayer()->displayCards();
+                    echo $blackjack->getPlayer()->displayCards();
                     ?>
                 </h4>
             </div>
             </br>
             <div id="dealer">
-                <h5>Dealer cards</h5>
+                <h5>Dealer's cards</h5>
                 <h4 class="bg-light d-inline-block p-3 rounded">
                     <?php
-                    echo $_SESSION['blackjack']->getDealer()->displayCards();
+                    echo $blackjack->checkForWinner() ? $blackjack->getDealer()->displayCards() :
+                        $blackjack->getDealer()->getCards()[0]->getUnicodeCharacter($includeColor = true);
                     ?>
                 </h4>
             </div>
         </div>
         <div class="col-3">
             <h3 class="mb-5">The Score</h3>
-            <h5>Player: <?php echo $_SESSION['blackjack']->getPlayer()->getScore() ?></h5>
-            <h5>Dealer: <?php echo $_SESSION['blackjack']->getDealer()->getScore() ?></h5>
+            <h5>Player: <?php echo $blackjack->getPlayer()->getScore() ?></h5>
+            <h5>
+                Dealer: <?php echo $blackjack->checkForWinner() ? $blackjack->getDealer()->getScore() : 'not known yet' ?></h5>
             </br>
             <h5>Your chips: <?php echo $_SESSION['chips'] ?></h5>
         </div>
@@ -174,9 +160,10 @@ if (isset($_POST['new-game'])) {
     <div class="row justify-content-center m-5">
         <form action="" method="POST">
             <fieldset>
-                <button type="submit" name="hit">Hit</button>
-                <button type="submit" name="stand">Stand</button>
-                <button type="submit" name="surrender">Surrender</button>
+                <?php $disabledButton = $blackjack->checkForWinner() ? 'disabled' : '' ?>
+                <button type="submit" name="action" value="hit" <?php echo $disabledButton ?>>Hit</button>
+                <button type="submit" name="action" value="stand" <?php echo $disabledButton ?>>Stand</button>
+                <button type="submit" name="action" value="surrender" <?php echo $disabledButton ?>>Surrender</button>
             </fieldset>
             <fieldset class="mt-5 <?php echo $_SESSION['hidden']; ?>">
                 <label for="chips">How many chips do you want to bet?</label>
@@ -184,12 +171,12 @@ if (isset($_POST['new-game'])) {
                        max="<?php echo $_SESSION['chips'] ?>">
             </fieldset>
             <?php
-            if ($_SESSION['blackjack']->checkForWinner()) :
+            if ($blackjack->checkForWinner()) :
                 ?>
                 <div class="m-5 p-3 bg-danger rounded"><?php echo $display ?></div>
                 <form action="" method="POST">
-                    <button type="submit" name="new-round">Same game, new round</button>
-                    <button type="submit" name="new-game">New game</button>
+                    <button type="submit" name="action" value="new-round">Same game, new round</button>
+                    <button type="submit" name="action" value="new-game">New game</button>
                 </form>
             <?php
             endif;

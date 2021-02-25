@@ -10,7 +10,7 @@ class Blackjack
     private CONST MAX_SCORE = 21;
 
     private Player $player;
-    private Player $dealer;
+    private Dealer $dealer;
     private Deck $deck;
 
     #[NoReturn] public function __construct()
